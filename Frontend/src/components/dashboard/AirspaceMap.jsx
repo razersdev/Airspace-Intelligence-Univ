@@ -1,20 +1,26 @@
+import { useEffect, useRef } from "react";
+
 import {
-  MapContainer,
-  TileLayer,
+  Map,
   Marker,
   Popup,
-  Polyline,
-  CircleMarker,
-} from "react-leaflet";
+  NavigationControl,
+  setWorkerUrl,
+} from "maplibre-gl";
 
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
-import { aircraftData } from "../../mocks/airspace";
+import "maplibre-gl/dist/maplibre-gl.css";
 
+import { aircraftData as defaultAircraftData } from "../../mocks/airspace";
+
+setWorkerUrl(workerUrl);
+
+/* =========================================
+   AIRCRAFT COLOR
+========================================= */
 
 function getAircraftColor(altitude) {
-
   if (altitude >= 30000) {
     return "#a855f7";
   }
@@ -30,60 +36,58 @@ function getAircraftColor(altitude) {
   return "#f5b51b";
 }
 
+/* =========================================
+   AIRCRAFT MARKER
+========================================= */
 
-function createAircraftIcon(aircraft) {
+function createAircraftElement(aircraft) {
+  const color = getAircraftColor(aircraft.altitude);
 
-  const color = getAircraftColor(
-    aircraft.altitude
-  );
+  const element = document.createElement("div");
 
+  element.className = "aircraft-map-icon";
 
-  return L.divIcon({
+  element.innerHTML = `
+    <div
+      class="plane-marker"
+      style="
+        color: ${color};
+        transform: rotate(${aircraft.heading}deg);
+      "
+    >
+      ✈
+    </div>
+  `;
 
-    className: "aircraft-map-icon",
-
-    html: `
-      <div
-        class="plane-marker"
-        style="
-          color:${color};
-          transform:rotate(${aircraft.heading}deg);
-        "
-      >
-        ✈
-      </div>
-    `,
-
-    iconSize: [30, 30],
-
-    iconAnchor: [15, 15],
-
-  });
+  return element;
 }
 
+/* =========================================
+   UBP MARKER
+========================================= */
 
-const ubpIcon = L.divIcon({
+function createUBPElement() {
+  const element = document.createElement("div");
 
-  className: "ubp-map-marker",
+  element.className = "ubp-map-marker";
 
-  html: `
+  element.innerHTML = `
     <div class="ubp-pin">
       <span>●</span>
     </div>
-  `,
+  `;
 
-  iconSize: [32, 32],
+  return element;
+}
 
-  iconAnchor: [16, 32],
-
-});
-
+/* =========================================
+   FLIGHT PATH DATA
+========================================= */
 
 const flightPaths = [
-
   {
+    id: "path-1",
     color: "#f5b51b",
-
     positions: [
       [-6.15, 107.05],
       [-6.25, 107.18],
@@ -93,8 +97,8 @@ const flightPaths = [
   },
 
   {
+    id: "path-2",
     color: "#22c55e",
-
     positions: [
       [-6.42, 107.12],
       [-6.35, 107.25],
@@ -104,8 +108,8 @@ const flightPaths = [
   },
 
   {
+    id: "path-3",
     color: "#168cff",
-
     positions: [
       [-6.10, 107.22],
       [-6.22, 107.32],
@@ -113,188 +117,538 @@ const flightPaths = [
       [-6.42, 107.52],
     ],
   },
-
 ];
 
+/* =========================================
+   MAIN COMPONENT
+========================================= */
 
-function AirspaceMap() {
+function AirspaceMap({
+  aircraft = defaultAircraftData,
+}) {
+  const mapContainerRef = useRef(null);
 
-  return (
+  const mapRef = useRef(null);
 
-    <div className="airspace-map">
+  const aircraftMarkersRef = useRef([]);
 
+  const ubpMarkerRef = useRef(null);
 
-      <MapContainer
+  const hasAircraftData = aircraft.length > 0;
 
-        center={[
-          -6.32,
-          107.30,
-        ]}
+  /* =========================================
+     INITIALIZE MAP
+  ========================================= */
 
-        zoom={12}
+  useEffect(() => {
+    if (!mapContainerRef.current) {
+      return;
+    }
 
-        scrollWheelZoom={true}
+    if (mapRef.current) {
+      return;
+    }
 
-        zoomControl={false}
+    const map = new Map({
+      container: mapContainerRef.current,
 
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
+      /*
+       * OpenFreeMap Fiord
+       *
+       * Dark blue / navy style.
+       * Tidak membutuhkan API key.
+       */
+      style: "https://tiles.openfreemap.org/styles/fiord",
 
-      >
+      /*
+       * Center Karawang / UBP
+       */
+      center: [107.30, -6.32],
 
+      /*
+       * Initial zoom
+       */
+      zoom: 10.8,
 
-        <TileLayer
+      minZoom: 5,
 
-          attribution="&copy; OpenStreetMap"
+      maxZoom: 18,
 
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      attributionControl: true,
+    });
 
-        />
+    mapRef.current = map;
 
+    /* =========================================
+       NAVIGATION CONTROL
+    ========================================= */
 
-        {/* JALUR PENERBANGAN */}
+    map.addControl(
+      new NavigationControl({
+        showCompass: false,
+        showZoom: false,
+      }),
+      "top-right"
+    );
 
-        {flightPaths.map(
-          (path, index) => (
+    /* =========================================
+       MAP LOADED
+    ========================================= */
 
-            <Polyline
+    map.on("load", () => {
+      /* =======================================
+         FLIGHT PATH GEOJSON
+      ======================================= */
 
-              key={index}
+      const flightPathFeatures = flightPaths.map(
+        (path) => ({
+          type: "Feature",
 
-              positions={path.positions}
+          properties: {
+            color: path.color,
+          },
 
-              pathOptions={{
-                color: path.color,
-                weight: 1.5,
-                opacity: 0.7,
-                dashArray: "6 7",
-              }}
+          geometry: {
+            type: "LineString",
 
-            />
+            coordinates: path.positions.map(
+              ([lat, lng]) => [
+                lng,
+                lat,
+              ]
+            ),
+          },
+        })
+      );
 
-          )
-        )}
+      map.addSource("flight-paths", {
+        type: "geojson",
 
+        data: {
+          type: "FeatureCollection",
 
-        {/* PESAWAT */}
+          features: flightPathFeatures,
+        },
+      });
 
-        {aircraftData.map(
-          (aircraft) => (
+      /* =======================================
+         FLIGHT PATH LINE
+      ======================================= */
 
-            <Marker
+      map.addLayer({
+        id: "flight-path-lines",
 
-              key={aircraft.aircraft_id}
+        type: "line",
 
-              position={[
-                aircraft.latitude,
-                aircraft.longitude,
-              ]}
+        source: "flight-paths",
 
-              icon={createAircraftIcon(
-                aircraft
-              )}
+        layout: {
+          "line-cap": "round",
+          "line-join": "round",
+        },
 
-            >
+        paint: {
+          "line-color": [
+            "get",
+            "color",
+          ],
 
-              <Popup>
+          "line-width": 2,
 
-                <div className="aircraft-popup">
+          "line-opacity": 0.9,
 
-                  <strong>
-                    ✈ {aircraft.callsign}
-                  </strong>
+          "line-dasharray": [
+            4,
+            4,
+          ],
+        },
+      });
 
-                  <span>
-                    {aircraft.status === "active"
-                      ? "Pesawat Aktif"
-                      : "Di Darat"}
-                  </span>
+      /* =======================================
+         UBP COVERAGE AREA
+      ======================================= */
 
-                  <p>
-                    Pesawat:{" "}
-                    {aircraft.aircraft_id}
-                  </p>
+      map.addSource("ubp-coverage", {
+        type: "geojson",
 
-                  <p>
-                    Ketinggian:{" "}
-                    {aircraft.altitude.toLocaleString()} ft
-                  </p>
+        data: {
+          type: "Feature",
 
-                  <p>
-                    Kecepatan:{" "}
-                    {aircraft.speed} km/h
-                  </p>
+          geometry: {
+            type: "Point",
 
-                  <p>
-                    Arah:{" "}
-                    {aircraft.heading}°
-                  </p>
+            coordinates: [
+              107.30,
+              -6.32,
+            ],
+          },
+        },
+      });
 
-                </div>
+      /* =======================================
+         COVERAGE CIRCLE
+      ======================================= */
 
-              </Popup>
+      map.addLayer({
+        id: "ubp-coverage-circle",
 
-            </Marker>
+        type: "circle",
 
-          )
-        )}
+        source: "ubp-coverage",
 
+        paint: {
+          "circle-radius": 45,
 
-        {/* UBP */}
+          "circle-color": "#168cff",
 
-        <Marker
+          "circle-opacity": 0.04,
 
-          position={[
-            -6.3208,
-            107.3021,
-          ]}
+          "circle-stroke-color":
+            "#168cff",
 
-          icon={ubpIcon}
+          "circle-stroke-width": 1,
 
-        >
+          "circle-stroke-opacity":
+            0.65,
+        },
+      });
+    });
 
-          <Popup>
+    /* =========================================
+       CLEANUP
+    ========================================= */
+
+    return () => {
+      aircraftMarkersRef.current.forEach(
+        (marker) => {
+          marker.remove();
+        }
+      );
+
+      aircraftMarkersRef.current = [];
+
+      if (ubpMarkerRef.current) {
+        ubpMarkerRef.current.remove();
+
+        ubpMarkerRef.current = null;
+      }
+
+      map.remove();
+
+      mapRef.current = null;
+    };
+  }, []);
+
+  /* =========================================
+     AIRCRAFT MARKERS
+  ========================================= */
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    const addAircraftMarkers = () => {
+      /* ---------------------------------------
+         Remove old markers
+      --------------------------------------- */
+
+      aircraftMarkersRef.current.forEach(
+        (marker) => {
+          marker.remove();
+        }
+      );
+
+      aircraftMarkersRef.current = [];
+
+      /* ---------------------------------------
+         No aircraft
+      --------------------------------------- */
+
+      if (!hasAircraftData) {
+        return;
+      }
+
+      /* ---------------------------------------
+         Add aircraft
+      --------------------------------------- */
+
+      aircraft.forEach((item) => {
+        const element =
+          createAircraftElement(item);
+
+        /* -------------------------------------
+           Popup
+        ------------------------------------- */
+
+        const popup = new Popup({
+          offset: 20,
+
+          closeButton: true,
+
+          closeOnClick: true,
+        }).setHTML(`
+          <div class="aircraft-popup">
 
             <strong>
-              UBP KARAWANG
+              ${item.callsign}
             </strong>
 
+            <span>
+              ${item.status}
+            </span>
+
             <p>
-              Airspace Intelligence Center
+              Aircraft ID:
+              ${item.aircraft_id}
             </p>
 
-          </Popup>
+            <p>
+              Altitude:
+              ${item.altitude.toLocaleString()}
+              ft
+            </p>
 
-        </Marker>
+            <p>
+              Speed:
+              ${item.speed}
+              kt
+            </p>
 
+            <p>
+              Heading:
+              ${item.heading}°
+            </p>
 
-        {/* AREA UBP */}
+            <p>
+              Vertical Rate:
+              ${item.vertical_rate}
+              ft/min
+            </p>
 
-        <CircleMarker
+          </div>
+        `);
 
-          center={[
-            -6.32,
-            107.30,
-          ]}
+        /* -------------------------------------
+           Marker
+        ------------------------------------- */
 
-          radius={45}
+        const marker = new Marker({
+          element,
 
-          pathOptions={{
-            color: "#168cff",
-            weight: 1,
-            opacity: 0.35,
-            fillColor: "#168cff",
-            fillOpacity: 0.04,
-          }}
+          anchor: "center",
+        })
+          .setLngLat([
+            item.longitude,
+            item.latitude,
+          ])
+          .setPopup(popup)
+          .addTo(map);
 
-        />
+        aircraftMarkersRef.current.push(
+          marker
+        );
+      });
+    };
 
-      </MapContainer>
+    /* ---------------------------------------
+       Wait for map
+    --------------------------------------- */
 
+    if (map.loaded()) {
+      addAircraftMarkers();
+    } else {
+      map.once(
+        "load",
+        addAircraftMarkers
+      );
+    }
 
-      {/* LEGEND */}
+    /* ---------------------------------------
+       Cleanup listener
+    --------------------------------------- */
+
+    return () => {
+      map.off(
+        "load",
+        addAircraftMarkers
+      );
+    };
+  }, [
+    aircraft,
+    hasAircraftData,
+  ]);
+
+  /* =========================================
+     UBP MARKER
+  ========================================= */
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    const addUBPMarker = () => {
+      /* ---------------------------------------
+         Prevent duplicate marker
+      --------------------------------------- */
+
+      if (ubpMarkerRef.current) {
+        ubpMarkerRef.current.remove();
+
+        ubpMarkerRef.current = null;
+      }
+
+      /* ---------------------------------------
+         Element
+      --------------------------------------- */
+
+      const element =
+        createUBPElement();
+
+      /* ---------------------------------------
+         Popup
+      --------------------------------------- */
+
+      const popup = new Popup({
+        offset: 25,
+      }).setHTML(`
+        <div class="aircraft-popup">
+
+          <strong>
+            UBP Karawang
+          </strong>
+
+          <span>
+            AIRSPACE MONITORING CENTER
+          </span>
+
+          <p>
+            Universitas Buana
+            Perjuangan Karawang
+          </p>
+
+        </div>
+      `);
+
+      /* ---------------------------------------
+         Marker
+      --------------------------------------- */
+
+      const marker = new Marker({
+        element,
+
+        anchor: "bottom",
+      })
+        .setLngLat([
+          107.3021,
+          -6.3208,
+        ])
+        .setPopup(popup)
+        .addTo(map);
+
+      ubpMarkerRef.current = marker;
+    };
+
+    if (map.loaded()) {
+      addUBPMarker();
+    } else {
+      map.once(
+        "load",
+        addUBPMarker
+      );
+    }
+
+    return () => {
+      map.off(
+        "load",
+        addUBPMarker
+      );
+    };
+  }, []);
+
+  /* =========================================
+     CUSTOM CONTROLS
+  ========================================= */
+
+  const handleZoomIn = () => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    mapRef.current.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    mapRef.current.zoomOut();
+  };
+
+  const handleReset = () => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    mapRef.current.flyTo({
+      center: [
+        107.30,
+        -6.32,
+      ],
+
+      zoom: 10.8,
+
+      essential: true,
+    });
+  };
+
+  /* =========================================
+     RENDER
+  ========================================= */
+
+  return (
+    <div className="airspace-map">
+
+      {/* =====================================
+          MAP
+      ===================================== */}
+
+      <div
+        ref={mapContainerRef}
+        className="maplibre-container"
+      />
+
+      {/* =====================================
+          EMPTY STATE
+      ===================================== */}
+
+      {!hasAircraftData && (
+        <div className="map-empty-state">
+
+          <div className="map-empty-icon">
+            ✈
+          </div>
+
+          <strong>
+            Tidak ada data airspace
+          </strong>
+
+          <p>
+            Menunggu data dari sistem...
+          </p>
+
+        </div>
+      )}
+
+      {/* =====================================
+          ALTITUDE LEGEND
+      ===================================== */}
 
       <div className="map-altitude-legend">
 
@@ -304,36 +658,59 @@ function AirspaceMap() {
 
         <span>
           <i className="legend-purple"></i>
+
           &gt; 30.000 ft
         </span>
 
         <span>
           <i className="legend-blue"></i>
+
           20.000 - 30.000 ft
         </span>
 
         <span>
           <i className="legend-green"></i>
+
           10.000 - 20.000 ft
         </span>
 
         <span>
           <i className="legend-yellow"></i>
+
           &lt; 10.000 ft
         </span>
 
       </div>
 
-
-      {/* CONTROL MAP */}
+      {/* =====================================
+          MAP CONTROLS
+      ===================================== */}
 
       <div className="map-controls">
 
-        <button>+</button>
+        <button
+          type="button"
+          onClick={handleZoomIn}
+          aria-label="Zoom in"
+        >
+          +
+        </button>
 
-        <button>−</button>
+        <button
+          type="button"
+          onClick={handleZoomOut}
+          aria-label="Zoom out"
+        >
+          −
+        </button>
 
-        <button>◉</button>
+        <button
+          type="button"
+          onClick={handleReset}
+          aria-label="Reset map"
+        >
+          ◉
+        </button>
 
       </div>
 
