@@ -105,3 +105,134 @@ export const flightData = [
     estimated_arrival: "2026-10-03T10:00:00Z",
   },
 ];
+
+// =========================
+// MOCK ACTIVITY DATA
+// =========================
+
+export const activityData = [
+  {
+    time: "06:00",
+    aircraft: 8,
+  },
+
+  {
+    time: "06:30",
+    aircraft: 12,
+  },
+
+  {
+    time: "07:00",
+    aircraft: 16,
+  },
+
+  {
+    time: "07:30",
+    aircraft: 21,
+  },
+
+  {
+    time: "08:00",
+    aircraft: 34,
+  },
+
+  {
+    time: "08:30",
+    aircraft: 27,
+  },
+
+  {
+    time: "09:00",
+    aircraft: 31,
+  },
+
+  {
+    time: "09:30",
+    aircraft: 28,
+  },
+
+  {
+    time: "10:00",
+    aircraft: 30,
+  },
+
+  {
+    time: "10:30",
+    aircraft: 24,
+  },
+
+  {
+    time: "11:00",
+    aircraft: 18,
+  },
+
+  {
+    time: "11:30",
+    aircraft: 15,
+  },
+
+  {
+    time: "12:00",
+    aircraft: 17,
+  },
+
+  {
+    time: "12:30",
+    aircraft: 13,
+  },
+
+  {
+    time: "13:00",
+    aircraft: 10,
+  },
+
+  {
+    time: "13:30",
+    aircraft: 8,
+  },
+
+  {
+    time: "14:00",
+    aircraft: 9,
+  },
+
+  {
+    time: "14:30",
+    aircraft: 12,
+  },
+
+  {
+    time: "15:00",
+    aircraft: 11,
+  },
+
+  {
+    time: "15:30",
+    aircraft: 15,
+  },
+
+  {
+    time: "16:00",
+    aircraft: 12,
+  },
+
+  {
+    time: "16:30",
+    aircraft: 10,
+  },
+
+  {
+    time: "17:00",
+    aircraft: 9,
+  },
+
+  {
+    time: "17:30",
+    aircraft: 8,
+  },
+
+  {
+    time: "18:00",
+    aircraft: 6,
+  },
+];
