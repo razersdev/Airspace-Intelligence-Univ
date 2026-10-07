@@ -5,16 +5,25 @@ import {
 
 import AirspaceMap from "../components/dashboard/AirspaceMap";
 import ActivityChart from "../components/dashboard/ActivityChart";
+import AltitudeDistribution from "../components/dashboard/AltitudeDistribution";
+import DirectionDistribution from "../components/dashboard/DirectionDistribution";
+
 import AircraftTable from "../components/aircraft/AircraftTable";
 
 
 function Dashboard() {
 
+  /* =========================================
+     DATA
+  ========================================== */
+
   const totalAircraft = aircraftData.length;
+
 
   const activeAircraft = aircraftData.filter(
     (aircraft) => aircraft.status === "active"
   );
+
 
   const activeFlights = flightData.filter(
     (flight) => flight.status === "active"
@@ -68,20 +77,23 @@ function Dashboard() {
 
 
   return (
+
     <div className="airspace-dashboard">
 
 
       {/* =========================================
-          HEADER
+          DASHBOARD HEADING
       ========================================== */}
 
       <section className="dashboard-heading">
+
 
         <div>
 
           <span className="dashboard-kicker">
             APA YANG TERJADI DI LANGIT KARAWANG?
           </span>
+
 
           <p>
             Ringkasan Aktivitas Lalu Lintas Udara Hari Ini
@@ -90,59 +102,76 @@ function Dashboard() {
         </div>
 
 
+
+        {/* FILTER ANALISIS */}
+
         <div className="analysis-filter">
+
 
           <div className="filter-title">
             PILIH PERIODE ANALISIS
           </div>
 
 
+
           <div className="filter-row">
 
             <label>
+
               Tanggal
 
               <strong>
                 24/05/2025
               </strong>
+
             </label>
 
           </div>
 
 
+
           <div className="filter-row">
 
             <label>
+
               Rentang Waktu
 
               <strong>
                 06:00 - 18:00
               </strong>
+
             </label>
 
           </div>
+
 
 
           <div className="filter-row">
 
             <label>
+
               Perbandingan
 
               <strong>
                 Tidak Ada
               </strong>
+
             </label>
 
           </div>
+
 
 
           <button className="analysis-button">
             🔍 Tampilkan Analisis
           </button>
 
+
         </div>
 
+
       </section>
+
 
 
       {/* =========================================
@@ -152,11 +181,14 @@ function Dashboard() {
       <section className="kpi-grid">
 
 
+        {/* PESAWAT TERDETEKSI */}
+
         <div className="kpi-card blue">
 
           <div className="kpi-icon">
             ✈
           </div>
+
 
           <div>
 
@@ -164,9 +196,11 @@ function Dashboard() {
               PESAWAT TERDETEKSI
             </span>
 
+
             <strong>
               {totalAircraft}
             </strong>
+
 
             <small>
               Total hari ini
@@ -177,11 +211,15 @@ function Dashboard() {
         </div>
 
 
+
+        {/* PESAWAT AKTIF */}
+
         <div className="kpi-card green">
 
           <div className="kpi-icon">
             ✈
           </div>
+
 
           <div>
 
@@ -189,9 +227,11 @@ function Dashboard() {
               PESAWAT AKTIF
             </span>
 
+
             <strong>
               {activeAircraft.length}
             </strong>
+
 
             <small>
               Sekarang di udara
@@ -202,11 +242,15 @@ function Dashboard() {
         </div>
 
 
+
+        {/* AKTIVITAS */}
+
         <div className="kpi-card yellow">
 
           <div className="kpi-icon">
             ⚠
           </div>
+
 
           <div>
 
@@ -214,9 +258,11 @@ function Dashboard() {
               AKTIVITAS SAAT INI
             </span>
 
+
             <strong>
               TINGGI
             </strong>
+
 
             <small>
               Indeks Aktivitas: 78/100
@@ -227,11 +273,15 @@ function Dashboard() {
         </div>
 
 
+
+        {/* KETINGGIAN TERTINGGI */}
+
         <div className="kpi-card purple">
 
           <div className="kpi-icon">
             ↑
           </div>
+
 
           <div>
 
@@ -239,12 +289,17 @@ function Dashboard() {
               KETINGGIAN TERTINGGI
             </span>
 
+
             <strong>
+
               {highestAircraft
                 ? highestAircraft.altitude.toLocaleString()
-                : "0"}{" "}
+                : "0"
+              }{" "}
               ft
+
             </strong>
+
 
             <small>
               10:42 WIB
@@ -255,11 +310,15 @@ function Dashboard() {
         </div>
 
 
+
+        {/* KECEPATAN TERTINGGI */}
+
         <div className="kpi-card cyan">
 
           <div className="kpi-icon">
             ◌
           </div>
+
 
           <div>
 
@@ -267,9 +326,11 @@ function Dashboard() {
               KECEPATAN TERTINGGI
             </span>
 
+
             <strong>
               {highestSpeed} km/h
             </strong>
+
 
             <small>
               11:18 WIB
@@ -280,11 +341,15 @@ function Dashboard() {
         </div>
 
 
+
+        {/* WAKTU TERSIBUK */}
+
         <div className="kpi-card blue">
 
           <div className="kpi-icon">
             ◔
           </div>
+
 
           <div>
 
@@ -292,9 +357,11 @@ function Dashboard() {
               WAKTU TERSIBUK
             </span>
 
+
             <strong>
               08:00 - 10:00
             </strong>
+
 
             <small>
               Jumlah pesawat tertinggi
@@ -308,16 +375,20 @@ function Dashboard() {
       </section>
 
 
+
       {/* =========================================
-          MAIN MONITORING
+          MAIN DASHBOARD
       ========================================== */}
 
       <section className="main-dashboard-grid">
 
 
-        {/* MAP */}
+        {/* =========================================
+            LIVE AIR TRAFFIC MAP
+        ========================================== */}
 
         <div className="panel map-panel">
+
 
           <div className="panel-title">
 
@@ -325,20 +396,27 @@ function Dashboard() {
               LIVE AIR TRAFFIC MAP
             </span>
 
+
             <div className="live-label">
               ● LIVE
             </div>
 
           </div>
 
+
           <AirspaceMap />
+
 
         </div>
 
 
-        {/* DAILY SUMMARY */}
+
+        {/* =========================================
+            RINGKASAN HARIAN
+        ========================================== */}
 
         <div className="panel daily-summary">
+
 
           <div className="panel-title">
 
@@ -349,15 +427,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon blue-text">
               ✈
             </span>
 
+
             <span>
               Total Pesawat Terdeteksi
             </span>
+
 
             <strong>
               {totalAircraft}
@@ -366,15 +447,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon yellow-text">
               ✈
             </span>
 
+
             <span>
               Pesawat Aktif (Sekarang)
             </span>
+
 
             <strong>
               {activeAircraft.length}
@@ -383,15 +467,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon green-text">
               ↕
             </span>
 
+
             <span>
               Rata-rata Ketinggian
             </span>
+
 
             <strong>
               {averageAltitude.toLocaleString()} ft
@@ -400,15 +487,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon blue-text">
               ◌
             </span>
 
+
             <span>
               Rata-rata Kecepatan
             </span>
+
 
             <strong>
               {averageSpeed} km/h
@@ -417,15 +507,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon red-text">
               ◷
             </span>
 
+
             <span>
               Total Durasi Pengamatan
             </span>
+
 
             <strong>
               12 jam
@@ -434,15 +527,18 @@ function Dashboard() {
           </div>
 
 
+
           <div className="summary-stat">
 
             <span className="summary-icon gray-text">
               ◷
             </span>
 
+
             <span>
               Data Update Terakhir
             </span>
+
 
             <strong>
               12:35:21 WIB
@@ -450,17 +546,20 @@ function Dashboard() {
 
           </div>
 
+
         </div>
 
 
+
         {/* =========================================
-            HOURLY ACTIVITY
+            AKTIVITAS PESAWAT PER JAM
         ========================================== */}
 
         <ActivityChart />
 
 
       </section>
+
 
 
       {/* =========================================
@@ -470,14 +569,22 @@ function Dashboard() {
       <section className="lower-grid">
 
 
-        {/* PESAWAT */}
+        {/* =========================================
+            5 PESAWAT AKTIF TERDEKAT
+        ========================================== */}
 
-        <AircraftTable aircraft={activeAircraft} />
+        <AircraftTable
+          aircraft={activeAircraft}
+        />
 
 
-        {/* HEATMAP */}
+
+        {/* =========================================
+            HEATMAP
+        ========================================== */}
 
         <div className="panel heatmap-panel">
+
 
           <div className="panel-title">
 
@@ -490,10 +597,15 @@ function Dashboard() {
 
           <div className="heatmap">
 
+
             <div className="heat-point hp1"></div>
+
             <div className="heat-point hp2"></div>
+
             <div className="heat-point hp3"></div>
+
             <div className="heat-point hp4"></div>
+
             <div className="heat-point hp5"></div>
 
 
@@ -518,121 +630,40 @@ function Dashboard() {
 
             </div>
 
+
           </div>
+
 
         </div>
 
 
-        {/* DISTRIBUSI */}
 
-        <div className="panel distribution-panel">
+        {/* =========================================
+            DISTRIBUSI KETINGGIAN
+        ========================================== */}
 
-          <div className="panel-title">
-
-            <span>
-              DISTRIBUSI KETINGGIAN
-            </span>
-
-          </div>
+        <AltitudeDistribution
+          aircraft={aircraftData}
+        />
 
 
-          <div className="donut-area">
 
-            <div className="donut">
+        {/* =========================================
+            ARAH KEDATANGAN PESAWAT
+        ========================================== */}
 
-              <div>
-
-                <strong>
-                  {totalAircraft}
-                </strong>
-
-                <span>
-                  Pesawat
-                </span>
-
-              </div>
-
-            </div>
+        <DirectionDistribution
+          aircraft={aircraftData}
+        />
 
 
-            <div className="donut-legend">
 
-              <span>
-                🟡 0 - 10.000 ft
-              </span>
-
-              <span>
-                🟢 10.000 - 20.000 ft
-              </span>
-
-              <span>
-                🔵 20.000 - 30.000 ft
-              </span>
-
-              <span>
-                🟣 30.000 - 40.000 ft
-              </span>
-
-              <span>
-                🟪 &gt; 40.000 ft
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        {/* RADAR */}
-
-        <div className="panel direction-panel">
-
-          <div className="panel-title">
-
-            <span>
-              ARAH KEDATANGAN PESAWAT
-            </span>
-
-          </div>
-
-
-          <div className="radar-chart">
-
-            <div className="radar-ring ring-1"></div>
-            <div className="radar-ring ring-2"></div>
-            <div className="radar-ring ring-3"></div>
-
-            <div className="radar-cross horizontal"></div>
-            <div className="radar-cross vertical"></div>
-
-            <div className="radar-blobs"></div>
-
-
-            <span className="north">
-              N
-            </span>
-
-            <span className="south">
-              S
-            </span>
-
-            <span className="east">
-              E
-            </span>
-
-            <span className="west">
-              W
-            </span>
-
-          </div>
-
-        </div>
-
-
-        {/* TREND */}
+        {/* =========================================
+            TREND 7 HARI
+        ========================================== */}
 
         <div className="panel trend-panel">
+
 
           <div className="panel-title">
 
@@ -644,6 +675,7 @@ function Dashboard() {
 
 
           <div className="trend-chart">
+
 
             {[55, 70, 60, 85, 72, 92, 65].map(
               (height, index) => (
@@ -663,27 +695,53 @@ function Dashboard() {
               )
             )}
 
+
           </div>
 
 
           <div className="trend-labels">
 
-            <span>18/05</span>
-            <span>19/05</span>
-            <span>20/05</span>
-            <span>21/05</span>
-            <span>22/05</span>
-            <span>23/05</span>
-            <span>24/05</span>
+            <span>
+              18/05
+            </span>
+
+            <span>
+              19/05
+            </span>
+
+            <span>
+              20/05
+            </span>
+
+            <span>
+              21/05
+            </span>
+
+            <span>
+              22/05
+            </span>
+
+            <span>
+              23/05
+            </span>
+
+            <span>
+              24/05
+            </span>
 
           </div>
+
 
         </div>
 
 
-        {/* INDEX */}
+
+        {/* =========================================
+            INDEKS AKTIVITAS
+        ========================================== */}
 
         <div className="panel index-panel">
+
 
           <div className="panel-title">
 
@@ -699,6 +757,7 @@ function Dashboard() {
             <div className="gauge-value">
               78
             </div>
+
 
             <small>
               /100
@@ -716,14 +775,16 @@ function Dashboard() {
             Dibandingkan rata-rata 7 hari: +18%
           </span>
 
+
         </div>
 
 
       </section>
 
 
+
       {/* =========================================
-          REPORT
+          LAPORAN
       ========================================== */}
 
       <section className="panel report-panel">
@@ -734,14 +795,18 @@ function Dashboard() {
         </div>
 
 
+
         <div className="report-grid">
 
+
+          {/* INTISARI */}
 
           <div>
 
             <h4>
               INTISARI HARI INI
             </h4>
+
 
             <p>
               Aktivitas lalu lintas udara di wilayah
@@ -754,11 +819,15 @@ function Dashboard() {
           </div>
 
 
+
+          {/* INSIGHT */}
+
           <div>
 
             <h4>
               INSIGHT UTAMA
             </h4>
+
 
             <ul>
 
@@ -767,13 +836,16 @@ function Dashboard() {
                 rata-rata 7 hari
               </li>
 
+
               <li>
                 Arah timur (E) paling dominan
               </li>
 
+
               <li>
                 Ketinggian tertinggi tercatat 38.700 ft
               </li>
+
 
               <li>
                 Pola aktivitas normal tanpa anomali
@@ -785,11 +857,15 @@ function Dashboard() {
           </div>
 
 
+
+          {/* REKOMENDASI */}
+
           <div>
 
             <h4>
               REKOMENDASI
             </h4>
+
 
             <ul>
 
@@ -798,10 +874,12 @@ function Dashboard() {
                 data jangka panjang
               </li>
 
+
               <li>
                 Perluas cakupan dengan penambahan
                 receiver di lokasi lain
               </li>
+
 
               <li>
                 Analisis lebih lanjut untuk pola mingguan
@@ -813,11 +891,15 @@ function Dashboard() {
           </div>
 
 
+
+          {/* POTENSI PENELITIAN */}
+
           <div>
 
             <h4>
               POTENSI PENELITIAN
             </h4>
+
 
             <ul>
 
@@ -826,10 +908,12 @@ function Dashboard() {
                 kepadatan lalu lintas
               </li>
 
+
               <li>
                 Studi pola ketinggian berdasarkan
                 jenis rute penerbangan
               </li>
+
 
               <li>
                 Deteksi anomali menggunakan
@@ -843,7 +927,9 @@ function Dashboard() {
 
         </div>
 
+
       </section>
+
 
 
       {/* =========================================
@@ -852,25 +938,36 @@ function Dashboard() {
 
       <footer className="dashboard-footer">
 
+
         <span>
           UBP Airspace Intelligence System
         </span>
 
-        <span>•</span>
+
+        <span>
+          •
+        </span>
+
 
         <span>
           Dibangun oleh Mahasiswa UBP Karawang
         </span>
 
-        <span>•</span>
+
+        <span>
+          •
+        </span>
+
 
         <span>
           Data real-time dari RTL-SDR ADS-B Receiver
         </span>
 
+
         <strong>
           ● SISTEM BERJALAN NORMAL
         </strong>
+
 
       </footer>
 
