@@ -1,6 +1,18 @@
+
+import { useState } from "react";
+
 function AircraftTable({ aircraft }) {
-  // Ambil maksimal 5 pesawat
-  const nearbyAircraft = aircraft.slice(0, 5);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter pesawat berdasarkan callsign
+  const filteredAircraft = aircraft.filter((item) =>
+    item.callsign
+      .toLowerCase()
+      .includes(searchTerm.trim().toLowerCase())
+  );
+
+  // Ambil maksimal 5 pesawat setelah filtering
+  const nearbyAircraft = filteredAircraft.slice(0, 5);
 
   // Ubah heading menjadi arah mata angin sederhana
   const getDirection = (heading) => {
@@ -8,27 +20,27 @@ function AircraftTable({ aircraft }) {
       return "N";
     }
 
-    if (heading >= 22.5 && heading < 67.5) {
+    if (heading < 67.5) {
       return "NE";
     }
 
-    if (heading >= 67.5 && heading < 112.5) {
+    if (heading < 112.5) {
       return "E";
     }
 
-    if (heading >= 112.5 && heading < 157.5) {
+    if (heading < 157.5) {
       return "SE";
     }
 
-    if (heading >= 157.5 && heading < 202.5) {
+    if (heading < 202.5) {
       return "S";
     }
 
-    if (heading >= 202.5 && heading < 247.5) {
+    if (heading < 247.5) {
       return "SW";
     }
 
-    if (heading >= 247.5 && heading < 292.5) {
+    if (heading < 292.5) {
       return "W";
     }
 
@@ -54,6 +66,32 @@ function AircraftTable({ aircraft }) {
       ========================= */}
       <div className="panel-title">
         <span>5 PESAWAT AKTIF TERDEKAT</span>
+      </div>
+
+      {/* =========================
+          SEARCH
+      ========================= */}
+      <div style={{ padding: "10px 0" }}>
+        <input
+          type="text"
+          placeholder="Cari callsign pesawat..."
+          value={searchTerm}
+          onChange={(event) =>
+            setSearchTerm(event.target.value)
+          }
+          aria-label="Cari callsign pesawat"
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "8px 10px",
+            backgroundColor: "#071a2d",
+            color: "#ffffff",
+            border: "1px solid rgba(22, 140, 255, 0.35)",
+            borderRadius: "6px",
+            outline: "none",
+            fontSize: "12px",
+          }}
+        />
       </div>
 
       {/* =========================
@@ -93,13 +131,12 @@ function AircraftTable({ aircraft }) {
 
             {/* HEADING */}
             <span>
-              {aircraft.heading}° {getDirection(aircraft.heading)}
+              {aircraft.heading}°{" "}
+              {getDirection(aircraft.heading)}
             </span>
 
             {/* DISTANCE */}
-            <span>
-              —
-            </span>
+            <span>—</span>
 
             {/* UPDATE */}
             <span>
@@ -107,6 +144,20 @@ function AircraftTable({ aircraft }) {
             </span>
           </div>
         ))}
+
+        {/* EMPTY STATE */}
+        {nearbyAircraft.length === 0 && (
+          <div
+            style={{
+              padding: "16px 8px",
+              textAlign: "center",
+              color: "#8ea3bd",
+              fontSize: "12px",
+            }}
+          >
+            Pesawat dengan callsign tersebut tidak ditemukan.
+          </div>
+        )}
       </div>
     </div>
   );
